@@ -44,8 +44,6 @@ const Dj = () => {
     };
     
     fetchTracks();
-    
-
     const interval = setInterval(fetchTracks, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -57,26 +55,27 @@ const Dj = () => {
     
     try {
       await markAsRead(id);
-      
-      setTracks(prev => prev.map(track => 
-        track.id === id ? { ...track, hasUnreadMessage: false } : track
-      ));
-      
+      setTracks(prev =>
+        prev.map(track =>
+          track.id === id ? { ...track, hasUnreadMessage: false } : track
+        )
+      );
+
       const messagesData = await getMessages(id);
       const formattedMessages = messagesData.map((msg: any) => ({
-        sender: msg.senderId === process.env.NEXT_PUBLIC_PRODUCER_ID 
-          ? "Producer" 
-          : "DJ",
+        sender:
+          msg.senderId === process.env.NEXT_PUBLIC_PRODUCER_ID
+            ? "Producer"
+            : "DJ",
         time: formatDate(msg.timestamp),
         message: msg.content,
         track: tracks.find(t => t.id === id)?.title || "",
         isDJ: msg.senderId === process.env.NEXT_PUBLIC_DJ_ID
       }));
-      
-      // Check if feedback already sent
-      const djSent = formattedMessages.some((msg: { isDJ: any; }) => msg.isDJ);
+
+      const djSent = formattedMessages.some((msg: { isDJ: any }) => msg.isDJ);
       setHasSentFeedback(djSent);
-      
+
       setMessages(formattedMessages);
       setOpenDialog(true);
     } catch (error) {
@@ -87,7 +86,7 @@ const Dj = () => {
 
   const handleSendFeedback = async () => {
     if (!selectedTrackId) return;
-    
+
     if (hasSentFeedback) {
       alert("You can only send one feedback per track");
       return;
@@ -101,8 +100,7 @@ const Dj = () => {
     setIsSending(true);
     try {
       await sendFeedback(selectedTrackId, feedbackContent);
-      
-      // Add new message to UI
+
       const newMessage: MessageData = {
         sender: "DJ",
         time: formatDate(new Date()),
@@ -110,15 +108,15 @@ const Dj = () => {
         track: tracks.find(t => t.id === selectedTrackId)?.title || "",
         isDJ: true
       };
-      
       setMessages(prev => [...prev, newMessage]);
       setHasSentFeedback(true);
       setFeedbackContent('');
-      
-      // Update track status
-      setTracks(prev => prev.map(track => 
-        track.id === selectedTrackId ? { ...track, hasFeedback: true } : track
-      ));
+
+      setTracks(prev =>
+        prev.map(track =>
+          track.id === selectedTrackId ? { ...track, hasFeedback: true } : track
+        )
+      );
     } catch (error) {
       console.error("Failed to send feedback:", error);
       alert('Failed to send feedback. Please try again.');
@@ -143,6 +141,8 @@ const Dj = () => {
     );
   }
 
+  const currentTrack = tracks.find(t => t.id === selectedTrackId);
+
   return (
     <div className="mt-10 mx-4 md:mx-20">
       {tracks.map((track) => (
@@ -150,7 +150,7 @@ const Dj = () => {
           key={track.id}
           className="flex flex-col md:flex-row md:items-center mb-8"
         >
-          {/* Left Side */}
+          {/* Left Side: Icon + Title/Artist */}
           <div className="flex items-center md:mr-10 mb-4 md:mb-0 min-w-[250px]">
             <FaPlay className="mr-3" />
             <div className="w-10 h-10 bg-gray-300 rounded mr-4"></div>
@@ -160,7 +160,7 @@ const Dj = () => {
             </div>
           </div>
 
-
+          {/* Middle: Progress Bar + Tags */}
           <div className="flex flex-col w-full max-w-[32rem]">
             <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-2 w-full">
               <div
@@ -180,7 +180,7 @@ const Dj = () => {
             </div>
           </div>
 
-          {/* Right Side */}
+          {/* not read */}
           <div className="text-right mt-2 md:mt-0 md:ml-auto md:mr-20">
             <p
               className="text-sm underline cursor-pointer"
@@ -193,53 +193,63 @@ const Dj = () => {
         </div>
       ))}
 
-      {/* Chatbox Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="max-w-md p-0">
           <DialogHeader>
-            <DialogTitle className="text-center text-lg font-bold mt-3">SEND FEEDBACK</DialogTitle>
+            <DialogTitle className="text-center text-lg font-bold mt-3">
+              SEND FEEDBACK
+            </DialogTitle>
           </DialogHeader>
 
           <hr />
-          {selectedTrackId && messages.length > 0 && (
-            <>
-              <div className="flex items-center space-x-4 px-4 py-2">
-                <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
-                <p className="text-sm font-semibold">{messages[0].sender}</p>
-              </div>
-              <hr />
-              <p className="text-xs text-center text-gray-400 py-1">{messages[0].time}</p>
-              
-              <div className="px-4 space-y-4 max-h-[300px] overflow-y-auto py-2">
-                {messages.map((msg, index) => (
-                  <div 
-                    key={index} 
-                    className={msg.isDJ ? "flex justify-end" : ""}
+
+
+          <div className="px-4 py-2 border-b">
+            <p className="text-sm font-medium text-gray-800">Producer:</p>
+          </div>
+
+          <div className="px-4 space-y-4 max-h-[300px] overflow-y-auto py-2">
+            {messages.length > 0 ? (
+              messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={msg.isDJ ? "flex justify-end" : ""}
+                >
+                  <div
+                    className={`p-2 rounded max-w-[70%] text-sm ${
+                      msg.isDJ ? "bg-blue-200" : "bg-gray-100"
+                    }`}
                   >
-                    <div className={`p-2 rounded max-w-[70%] text-sm ${
-                      msg.isDJ 
-                        ? "bg-blue-200" 
-                        : "bg-gray-100"
-                    }`}>
-                      {msg.message && <p>{msg.message}</p>}
-                      {!msg.isDJ && (
-                        <div className="flex items-center bg-white rounded px-2 py-1 mt-2 w-fit shadow-sm">
-                          <div className="w-4 h-4 bg-gray-300 mr-2"></div>
-                          <p className="text-xs text-gray-800">{msg.track}</p>
-                        </div>
-                      )}
-                      {msg.isDJ && (
-                        <div className="flex items-center justify-end mt-1 text-[10px] text-gray-500">
-                          {msg.time.split(', ')[1]} 
-                          <IoCheckmarkDoneOutline className="ml-1 text-blue-500" />
-                        </div>
-                      )}
+                    {msg.message && <p>{msg.message}</p>}
+                    {!msg.isDJ && (
+                      <div className="flex items-center bg-white rounded px-2 py-1 mt-2 w-fit shadow-sm">
+                        <div className="w-4 h-4 bg-gray-300 mr-2"></div>
+                        <p className="text-xs text-gray-800">{msg.track}</p>
+                      </div>
+                    )}
+                    {msg.isDJ && (
+                      <div className="flex items-center justify-end mt-1 text-[10px] text-gray-500">
+                        {msg.time.split(', ')[1]}
+                        <IoCheckmarkDoneOutline className="ml-1 text-blue-500" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+
+              currentTrack && (
+                <div className="flex">
+                  <div className="p-2 rounded max-w-[70%] text-sm bg-gray-100">
+                    <div className="flex items-center bg-white rounded px-2 py-1 mt-2 w-fit shadow-sm">
+                      <div className="w-4 h-4 bg-gray-300 mr-2"></div>
+                      <p className="text-xs text-gray-800">{currentTrack.title}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </>
-          )}
+                </div>
+              )
+            )}
+          </div>
 
           <hr className="mt-2" />
           <div className="flex items-center px-4 py-2">
@@ -251,10 +261,10 @@ const Dj = () => {
               className="flex-1 p-2 rounded bg-gray-100 text-sm focus:outline-none"
               disabled={hasSentFeedback}
             />
-            <button 
+            <button
               className={`ml-2 px-4 py-2 text-sm rounded ${
-                hasSentFeedback 
-                  ? "bg-gray-400 cursor-not-allowed" 
+                hasSentFeedback
+                  ? "bg-gray-400 cursor-not-allowed"
                   : "bg-blue-500 hover:bg-blue-600 text-white"
               }`}
               onClick={handleSendFeedback}

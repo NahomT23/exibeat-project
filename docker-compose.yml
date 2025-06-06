@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  backend:
+    image: node:18-alpine
+    container_name: exibeat-backend-dev
+    working_dir: /usr/src/app
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend/.env
+    networks:
+      - exibeat-dev-net
+    command: >
+      sh -c "
+        npm install &&
+        npm run start:dev
+      "
+
+  frontend:
+    image: node:18-alpine
+    container_name: exibeat-frontend-dev
+    working_dir: /usr/src/app
+    volumes:
+      - ./frontend:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    networks:
+      - exibeat-dev-net
+    command: >
+      sh -c "
+        npm install &&
+        npm run dev
+      "
+
+networks:
+  exibeat-dev-net:
+    driver: bridge
