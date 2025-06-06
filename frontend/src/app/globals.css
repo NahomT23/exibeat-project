@@ -122,3 +122,22 @@
 }
 
 
+
+
+
+
+
+.hkg-light {
+  font-family: var(--font-hkgrotesk);
+  font-weight: 300;
+}
+
+.hkg-regular {
+  font-family: var(--font-hkgrotesk);
+  font-weight: 400;
+}
+
+.hkg-bold {
+  font-family: var(--font-hkgrotesk);
+  font-weight: 700;
+}

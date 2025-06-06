@@ -1,4 +1,3 @@
-// submissions.controller.ts
 import { Controller, Get, Post, Put, Body, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam } from '@nestjs/swagger';
 import { Submission } from '../schemas/Submission.schema';
